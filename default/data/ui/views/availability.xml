@@ -1,0 +1,45 @@
+<dashboard version="2" theme="light">
+  <label>Availability</label>
+  <definition><![CDATA[
+{
+  "title": "Availability",
+  "visualizations": {
+    "viz_status": {"type": "splunk.singlevalue", "title": "Current status (last 5m)", "dataSources": {"primary": "ds_status"}, "options": {"majorColor": "> majorValue | matchValue(statusColors)"}, "context": {"statusColors": [{"match": "DOWN", "value": "#D41F1F"}, {"match": "No data", "value": "#8C8C8C"}, {"match": "UP", "value": "#118832"}]}},
+    "viz_outages": {"type": "splunk.singlevalue", "title": "Complete outages", "dataSources": {"primary": "ds_outage_count"}, "options": {"majorColor": "> majorValue | rangeValue(outageColors)"}, "context": {"outageColors": [{"to": 1, "value": "#118832"}, {"from": 1, "value": "#D41F1F"}]}},
+    "viz_downtime": {"type": "splunk.singlevalue", "title": "Total downtime", "dataSources": {"primary": "ds_downtime"}},
+    "viz_availability": {"type": "splunk.singlevalue", "title": "Availability", "dataSources": {"primary": "ds_availability"}, "options": {"unit": "%", "majorColor": "> majorValue | rangeValue(availColors)"}, "context": {"availColors": [{"to": 95, "value": "#D41F1F"}, {"from": 95, "to": 99.5, "value": "#CBA700"}, {"from": 99.5, "value": "#118832"}]}},
+    "viz_timeline": {"type": "splunk.area", "title": "Reachable targets over time (0 = complete outage)", "dataSources": {"primary": "ds_timeline"}},
+    "viz_summary": {"type": "splunk.table", "title": "Per-target outage summary", "dataSources": {"primary": "ds_summary"}},
+    "viz_windows": {"type": "splunk.table", "title": "Outage windows (newest first)", "dataSources": {"primary": "ds_windows"}}
+  },
+  "dataSources": {
+    "ds_status": {"type": "ds.search", "options": {"query": "`netkit_index` sourcetype=netkit:ping earliest=-5m latest=now | stats sum(received) as recv count as n | eval status=if(n==0,\"No data\",if(recv>0,\"UP\",\"DOWN\")) | fields status"}},
+    "ds_link": {"type": "ds.search", "options": {"query": "`netkit_index` sourcetype=netkit:ping | bin _time span=1m | stats sum(received) as recv by _time target | eval up=if(recv>0,1,0) | stats sum(up) as targets_up by _time | eval link_down=if(targets_up==0,1,0)", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}},
+    "ds_link_windows": {"type": "ds.chain", "options": {"extend": "ds_link", "query": "| sort 0 _time | streamstats current=f last(link_down) as prev | eval brk=if(link_down!=prev OR isnull(prev),1,0) | streamstats sum(brk) as grp | where link_down=1 | stats min(_time) as start_e max(_time) as end_e by grp | eval dur=end_e-start_e+60"}},
+    "ds_outage_count": {"type": "ds.chain", "options": {"extend": "ds_link_windows", "query": "| stats count as complete_outages"}},
+    "ds_downtime": {"type": "ds.chain", "options": {"extend": "ds_link_windows", "query": "| stats count as _c sum(dur) as total_s | eval downtime=if(isnull(total_s) OR total_s==0,\"0s\",tostring(total_s,\"duration\")) | table downtime"}},
+    "ds_availability": {"type": "ds.chain", "options": {"extend": "ds_link", "query": "| stats count as bins sum(link_down) as down | eval availability=if(bins==0,null(),round(100*(bins-down)/bins,2)) | fields availability"}},
+    "ds_timeline": {"type": "ds.search", "options": {"query": "`netkit_index` sourcetype=netkit:ping | bin _time span=1m | stats dc(eval(if(received>0,target,null()))) as reachable_targets by _time", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}},
+    "ds_target": {"type": "ds.search", "options": {"query": "`netkit_index` sourcetype=netkit:ping | bin _time span=1m | stats sum(received) as recv by _time target | eval down=if(recv>0,0,1) | eventstats count as total_bins sum(down) as down_bins by target | sort 0 target _time | streamstats current=f last(down) as prev by target | eval brk=if(down!=prev OR isnull(prev),1,0) | streamstats sum(brk) as grp by target", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}},
+    "ds_summary": {"type": "ds.chain", "options": {"extend": "ds_target", "query": "| where down=1 | stats min(_time) as start_e max(_time) as end_e values(total_bins) as tb values(down_bins) as db by target grp | eval dur=end_e-start_e+60 | stats count as outages sum(dur) as tot max(dur) as lng max(end_e) as last values(tb) as tb values(db) as db by target | eval availability_pct=round(100*(tb-db)/tb,2), total_downtime=tostring(tot,\"duration\"), longest_outage=tostring(lng,\"duration\"), last_outage=strftime(last,\"%Y-%m-%d %H:%M:%S\") | sort - outages | table target outages total_downtime longest_outage availability_pct last_outage"}},
+    "ds_windows": {"type": "ds.chain", "options": {"extend": "ds_target", "query": "| where down=1 | stats min(_time) as start_e max(_time) as end_e by target grp | eval duration=tostring(end_e-start_e+60,\"duration\"), start=strftime(start_e,\"%Y-%m-%d %H:%M:%S\"), end=strftime(end_e+60,\"%Y-%m-%d %H:%M:%S\") | table target start end duration start_e | append [ search `netkit_index` sourcetype=netkit:ping | bin _time span=1m | stats sum(received) as recv by _time target | eval up=if(recv>0,1,0) | stats sum(up) as targets_up by _time | eval link_down=if(targets_up==0,1,0) | sort 0 _time | streamstats current=f last(link_down) as prev | eval brk=if(link_down!=prev OR isnull(prev),1,0) | streamstats sum(brk) as grp | where link_down=1 | stats min(_time) as start_e max(_time) as end_e by grp | eval target=\"ALL\", duration=tostring(end_e-start_e+60,\"duration\"), start=strftime(start_e,\"%Y-%m-%d %H:%M:%S\"), end=strftime(end_e+60,\"%Y-%m-%d %H:%M:%S\") | table target start end duration start_e ] | sort - start_e | fields - start_e"}}
+  },
+  "inputs": {
+    "input_time": {"type": "input.timerange", "title": "Time range", "options": {"defaultValue": "-24h@h,now", "token": "global_time"}}
+  },
+  "layout": {
+    "type": "grid",
+    "structure": [
+      {"item": "viz_status", "position": {"x": 0, "y": 0, "w": 300, "h": 150}},
+      {"item": "viz_outages", "position": {"x": 300, "y": 0, "w": 300, "h": 150}},
+      {"item": "viz_downtime", "position": {"x": 600, "y": 0, "w": 300, "h": 150}},
+      {"item": "viz_availability", "position": {"x": 900, "y": 0, "w": 300, "h": 150}},
+      {"item": "viz_timeline", "position": {"x": 0, "y": 150, "w": 1200, "h": 250}},
+      {"item": "viz_summary", "position": {"x": 0, "y": 400, "w": 1200, "h": 250}},
+      {"item": "viz_windows", "position": {"x": 0, "y": 650, "w": 1200, "h": 250}}
+    ],
+    "globalInputs": ["input_time"]
+  }
+}
+]]></definition>
+</dashboard>

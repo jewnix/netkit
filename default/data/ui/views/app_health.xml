@@ -1,0 +1,65 @@
+<dashboard version="2" theme="light">
+  <label>App Health</label>
+  <definition><![CDATA[
+{
+  "title": "App Health",
+  "visualizations": {
+    "viz_errors": {
+      "type": "splunk.singlevalue",
+      "title": "Errors (24h)",
+      "dataSources": {"primary": "ds_errors"}
+    },
+    "viz_warns": {
+      "type": "splunk.singlevalue",
+      "title": "Warnings (24h)",
+      "dataSources": {"primary": "ds_warns"}
+    },
+    "viz_levels": {
+      "type": "splunk.line",
+      "title": "Log levels over time",
+      "dataSources": {"primary": "ds_levels"}
+    },
+    "viz_recent": {
+      "type": "splunk.table",
+      "title": "Recent log lines",
+      "dataSources": {"primary": "ds_recent"}
+    }
+  },
+  "dataSources": {
+    "ds_errors": {
+      "type": "ds.search",
+      "options": {"query": "index=_internal sourcetype=netkit_log log_level=ERROR | stats count", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
+    },
+    "ds_warns": {
+      "type": "ds.search",
+      "options": {"query": "index=_internal sourcetype=netkit_log log_level=WARNING | stats count", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
+    },
+    "ds_levels": {
+      "type": "ds.search",
+      "options": {"query": "index=_internal sourcetype=netkit_log | timechart span=1h count by log_level", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
+    },
+    "ds_recent": {
+      "type": "ds.search",
+      "options": {"query": "index=_internal sourcetype=netkit_log | sort - _time | table _time log_level _raw | head 100", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
+    }
+  },
+  "inputs": {
+    "input_time": {
+      "type": "input.timerange",
+      "title": "Time range",
+      "options": {"defaultValue": "-24h@h,now", "token": "global_time"}
+    }
+  },
+  "layout": {
+    "type": "grid",
+    "structure": [
+      {"item": "viz_errors", "position": {"x": 0, "y": 0, "w": 300, "h": 200}},
+      {"item": "viz_warns", "position": {"x": 300, "y": 0, "w": 300, "h": 200}},
+      {"item": "viz_levels", "position": {"x": 0, "y": 200, "w": 1200, "h": 300}},
+      {"item": "viz_recent", "position": {"x": 0, "y": 500, "w": 1200, "h": 300}}
+    ],
+    "globalInputs": ["input_time"]
+  }
+}
+]]></definition>
+</dashboard>

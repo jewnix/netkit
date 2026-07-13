@@ -1,0 +1,8 @@
+[]
+access = read : [ * ], write : [ admin, sc_admin, power ]
+
+[props]
+export = system
+
+[macros/netkit_index]
+export = system

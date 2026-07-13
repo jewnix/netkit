@@ -1,0 +1,55 @@
+<dashboard version="2" theme="light">
+  <label>Speedtest Trends</label>
+  <definition><![CDATA[
+{
+  "title": "Speedtest Trends",
+  "visualizations": {
+    "viz_throughput": {
+      "type": "splunk.line",
+      "title": "Download / Upload (Mbps)",
+      "dataSources": {"primary": "ds_throughput"}
+    },
+    "viz_latency": {
+      "type": "splunk.line",
+      "title": "Latency (ms)",
+      "dataSources": {"primary": "ds_latency"}
+    },
+    "viz_recent": {
+      "type": "splunk.table",
+      "title": "Recent runs",
+      "dataSources": {"primary": "ds_recent"}
+    }
+  },
+  "dataSources": {
+    "ds_throughput": {
+      "type": "ds.search",
+      "options": {"query": "`netkit_index` sourcetype=netkit:speedtest | timechart span=30m avg(download_mbps) as download_mbps avg(upload_mbps) as upload_mbps", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
+    },
+    "ds_latency": {
+      "type": "ds.search",
+      "options": {"query": "`netkit_index` sourcetype=netkit:speedtest | timechart span=30m avg(latency) as latency_ms", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
+    },
+    "ds_recent": {
+      "type": "ds.search",
+      "options": {"query": "`netkit_index` sourcetype=netkit:speedtest | sort - _time | table _time download_mbps upload_mbps latency server_location ok | head 50", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
+    }
+  },
+  "inputs": {
+    "input_time": {
+      "type": "input.timerange",
+      "title": "Time range",
+      "options": {"defaultValue": "-7d@d,now", "token": "global_time"}
+    }
+  },
+  "layout": {
+    "type": "grid",
+    "structure": [
+      {"item": "viz_throughput", "position": {"x": 0, "y": 0, "w": 1200, "h": 300}},
+      {"item": "viz_latency", "position": {"x": 0, "y": 300, "w": 600, "h": 300}},
+      {"item": "viz_recent", "position": {"x": 600, "y": 300, "w": 600, "h": 300}}
+    ],
+    "globalInputs": ["input_time"]
+  }
+}
+]]></definition>
+</dashboard>

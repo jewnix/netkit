@@ -1,0 +1,55 @@
+<dashboard version="2" theme="light">
+  <label>Ping Trends</label>
+  <definition><![CDATA[
+{
+  "title": "Ping Trends",
+  "visualizations": {
+    "viz_avg": {
+      "type": "splunk.line",
+      "title": "Average connect latency (ms) by target",
+      "dataSources": {"primary": "ds_avg"}
+    },
+    "viz_jitter": {
+      "type": "splunk.line",
+      "title": "Jitter (ms) by target",
+      "dataSources": {"primary": "ds_jitter"}
+    },
+    "viz_table": {
+      "type": "splunk.table",
+      "title": "Per-target summary",
+      "dataSources": {"primary": "ds_table"}
+    }
+  },
+  "dataSources": {
+    "ds_avg": {
+      "type": "ds.search",
+      "options": {"query": "`netkit_index` sourcetype=netkit:ping | timechart span=5m avg(latency) by target", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
+    },
+    "ds_jitter": {
+      "type": "ds.search",
+      "options": {"query": "`netkit_index` sourcetype=netkit:ping | timechart span=5m avg(jitter_ms) by target", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
+    },
+    "ds_table": {
+      "type": "ds.search",
+      "options": {"query": "`netkit_index` sourcetype=netkit:ping | stats min(min_ms) as min_ms avg(avg_ms) as avg_ms max(max_ms) as max_ms avg(failure_pct) as failure_pct by target", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
+    }
+  },
+  "inputs": {
+    "input_time": {
+      "type": "input.timerange",
+      "title": "Time range",
+      "options": {"defaultValue": "-24h@h,now", "token": "global_time"}
+    }
+  },
+  "layout": {
+    "type": "grid",
+    "structure": [
+      {"item": "viz_avg", "position": {"x": 0, "y": 0, "w": 1200, "h": 300}},
+      {"item": "viz_jitter", "position": {"x": 0, "y": 300, "w": 600, "h": 300}},
+      {"item": "viz_table", "position": {"x": 600, "y": 300, "w": 600, "h": 300}}
+    ],
+    "globalInputs": ["input_time"]
+  }
+}
+]]></definition>
+</dashboard>

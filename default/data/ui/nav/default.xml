@@ -1,0 +1,6 @@
+<nav search_view="search">
+  <view name="ping_trends" default="true" icon="pulse"/>
+  <view name="speedtest_trends" icon="chartgauge"/>
+  <view name="availability" icon="bell"/>
+  <view name="app_health" icon="layoutoverview"/>
+</nav>
