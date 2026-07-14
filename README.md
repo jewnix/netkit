@@ -2,9 +2,9 @@
 
 Installed on the Splunk Cloud search head. Provides four Dashboard Studio views
 (Ping Trends, Speedtest Trends, Availability, App Health) plus search-time JSON
-extraction, CIM-friendly aliases (`latency`, `dest_port`, `bytes_in`/`bytes_out`),
-and the `netkit_index` macro. The field extractions and the macro are exported
-globally so ad-hoc searches work from any app; the views stay scoped to this app.
+extraction and the `netkit_index` macro. The field extractions and the macro are
+exported globally so ad-hoc searches work from any app; the views stay scoped to
+this app.
 
 ## Requires the NetKit Add-on
 
@@ -12,6 +12,17 @@ This app only visualizes data; it does not collect it. Install the companion
 collection add-on, [TA_netkit](https://github.com/jewnix/TA_netkit), on a Heavy
 Forwarder to run the probes and produce the `netkit:ping` and `netkit:speedtest`
 events these dashboards read, then point `netkit_index` at the index it writes to.
+
+## CIM (Common Information Model)
+
+NetKit's probe events are members of the CIM **Network Traffic** data model
+(`All_Traffic`). Two things are required for the data model to return them:
+
+1. Install the **Splunk CIM Add-on** (`Splunk_SA_CIM`) on the same search head.
+2. Add NetKit's index (default `index=main`) to `cim_Network_Traffic_indexes` via
+   the CIM Setup UI, otherwise the data model stays empty.
+
+Filter NetKit's synthetic traffic with `vendor_product=NetKit`.
 
 ## Install (Cloud search head)
 

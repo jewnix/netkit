@@ -14,5 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Availability dashboard for complete-outage KPIs, an outage timeline, and per-target status.
 - App Health dashboard for NetKit's probe logs.
 - Search-time JSON field extraction for netkit:ping and netkit:speedtest events.
-- CIM-friendly field aliases: latency, dest_port, bytes_in, bytes_out, duration.
+- Field aliases (latency, dest_port, bytes_in, bytes_out, duration) for the metric sourcetypes.
+- CIM Network Traffic (All_Traffic) data model membership via eventtypes.conf, tags.conf, and search-time field normalization.
+- commonInformationModels declaration (Network_Traffic) in app.manifest.
 - netkit_index macro for targeting the destination index.

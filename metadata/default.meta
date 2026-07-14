@@ -6,3 +6,9 @@ export = system
 
 [macros/netkit_index]
 export = system
+
+[eventtypes]
+export = system
+
+[tags]
+export = system
