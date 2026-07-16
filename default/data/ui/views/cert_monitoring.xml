@@ -1,0 +1,65 @@
+<dashboard version="2" theme="light">
+  <label>Certificate Monitoring</label>
+  <definition><![CDATA[
+{
+  "title": "Certificate Monitoring",
+  "visualizations": {
+    "viz_expiry": {
+      "type": "splunk.table",
+      "title": "Expiry overview (soonest first)",
+      "dataSources": {"primary": "ds_expiry"}
+    },
+    "viz_validity": {
+      "type": "splunk.table",
+      "title": "Validation failures",
+      "dataSources": {"primary": "ds_validity"}
+    },
+    "viz_inventory": {
+      "type": "splunk.table",
+      "title": "Certificate inventory (latest per target)",
+      "dataSources": {"primary": "ds_inventory"}
+    },
+    "viz_changes": {
+      "type": "splunk.table",
+      "title": "Certificate change history",
+      "dataSources": {"primary": "ds_changes"}
+    }
+  },
+  "dataSources": {
+    "ds_expiry": {
+      "type": "ds.search",
+      "options": {"query": "`netkit_index` sourcetype=netkit:tls | stats latest(days_to_expiry) as days_to_expiry latest(not_after) as not_after latest(ca) as ca by target | eval expires=strftime(not_after, \"%Y-%m-%d\"), severity=case(days_to_expiry<=7,\"critical\", days_to_expiry<=`netkit_cert_expiry_warning_days`,\"warning\", true(),\"ok\") | sort days_to_expiry | table target severity days_to_expiry expires ca", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
+    },
+    "ds_validity": {
+      "type": "ds.search",
+      "options": {"query": "`netkit_index` sourcetype=netkit:tls | stats latest(verify_ok) as verify_ok latest(verify_error) as verify_error latest(ca) as ca by target | where verify_ok=0 | table target verify_error ca", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
+    },
+    "ds_inventory": {
+      "type": "ds.search",
+      "options": {"query": "`netkit_index` sourcetype=netkit:tls | stats latest(issuer_cn) as issuer_cn latest(subject_cn) as subject_cn latest(not_after) as not_after latest(verify_ok) as verify_ok latest(ca) as ca by target | eval not_after=strftime(not_after, \"%Y-%m-%d\") | table target subject_cn issuer_cn not_after verify_ok ca", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
+    },
+    "ds_changes": {
+      "type": "ds.search",
+      "options": {"query": "`netkit_index` sourcetype=netkit:tls | sort 0 target _time | streamstats current=f last(cert_sha256) as prev_sha256 by target | where isnotnull(cert_sha256) AND isnotnull(prev_sha256) AND cert_sha256!=prev_sha256 | eval changed=strftime(_time, \"%Y-%m-%d %H:%M\") | table changed target prev_sha256 cert_sha256", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
+    }
+  },
+  "inputs": {
+    "input_time": {
+      "type": "input.timerange",
+      "title": "Time range",
+      "options": {"defaultValue": "-7d@h,now", "token": "global_time"}
+    }
+  },
+  "layout": {
+    "type": "grid",
+    "structure": [
+      {"item": "viz_expiry", "position": {"x": 0, "y": 0, "w": 600, "h": 300}},
+      {"item": "viz_validity", "position": {"x": 600, "y": 0, "w": 600, "h": 300}},
+      {"item": "viz_inventory", "position": {"x": 0, "y": 300, "w": 600, "h": 300}},
+      {"item": "viz_changes", "position": {"x": 600, "y": 300, "w": 600, "h": 300}}
+    ],
+    "globalInputs": ["input_time"]
+  }
+}
+]]></definition>
+</dashboard>

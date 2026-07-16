@@ -18,3 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CIM Network Traffic (All_Traffic) data model membership via eventtypes.conf, tags.conf, and search-time field normalization.
 - commonInformationModels declaration (Network_Traffic) in app.manifest.
 - netkit_index macro for targeting the destination index.
+- Certificate Monitoring dashboard for certificate expiry, validation status, and chain trust by target.
+- Search-time JSON field extraction and CIM Certificates data model normalization for netkit:tls events.
+- commonInformationModels declaration (Certificates) in app.manifest.
+- Alert: NetKit - Certificate expiring soon.
+- Alert: NetKit - Certificate validation failed.
+- Alert: NetKit - Certificate changed.
+
