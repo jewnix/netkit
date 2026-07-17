@@ -3,5 +3,6 @@
   <view name="speedtest_trends" icon="chartgauge"/>
   <view name="cert_monitoring" icon="filemagnifier"/>
   <view name="availability" icon="bell"/>
+  <view name="search" icon="magnifier"/>
   <view name="app_health" icon="layoutoverview"/>
 </nav>
