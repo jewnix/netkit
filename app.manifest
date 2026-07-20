@@ -9,7 +9,7 @@
         },
         "author": [{"name": "David Twersky", "email": "netkit@twersky.me", "company": null}],
         "releaseDate": "2026-07-13",
-        "description": "NetKit App. Dashboards for network latency, throughput, and TLS certificate trends, for use with Splunk Enterprise and Splunk Cloud. NetKit data is normalized to the CIM Network Traffic and Certificates data models. Companion to the NetKit Add-on.",
+        "description": "NetKit App. Dashboards for network latency, throughput, and TLS certificate trends, for use with Splunk Enterprise and Splunk Cloud. NetKit data is normalized to the CIM Network Traffic and Certificates data models. Requires the NetKit Add-on (https://splunkbase.splunk.com/app/9165).",
         "classification": {
             "intendedAudience": "IT Professionals",
             "categories": ["IT Operations"],
