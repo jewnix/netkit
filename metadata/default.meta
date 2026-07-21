@@ -12,3 +12,9 @@ export = system
 
 [tags]
 export = system
+
+[transforms]
+export = system
+
+[lookups]
+export = system

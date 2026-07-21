@@ -32,11 +32,11 @@
     },
     "ds_validity": {
       "type": "ds.search",
-      "options": {"query": "`netkit_index` sourcetype=netkit:tls | stats latest(verify_ok) as verify_ok latest(verify_error) as verify_error latest(ca) as ca by target | where verify_ok=0 | table target verify_error ca", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
+      "options": {"query": "`netkit_index` sourcetype=netkit:tls | stats latest(verify_ok) as verify_ok latest(verify_error) as verify_error latest(status) as status latest(ca) as ca by target | where verify_ok=0 | table target status verify_error ca", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
     },
     "ds_inventory": {
       "type": "ds.search",
-      "options": {"query": "`netkit_index` sourcetype=netkit:tls | stats latest(issuer_cn) as issuer_cn latest(subject_cn) as subject_cn latest(not_after) as not_after latest(verify_ok) as verify_ok latest(ca) as ca by target | eval not_after=strftime(not_after, \"%Y-%m-%d\") | table target subject_cn issuer_cn not_after verify_ok ca", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
+      "options": {"query": "`netkit_index` sourcetype=netkit:tls | stats latest(issuer_display) as issuer latest(subject_cn) as subject_cn latest(not_after) as not_after latest(pubkey_type) as pubkey_type latest(pubkey_bits) as pubkey_bits latest(sig_hash_algorithm) as sig_hash_algorithm latest(verify_ok) as verify_ok latest(ca) as ca by target | eval not_after=strftime(not_after, \"%Y-%m-%d\"), key=if(isnotnull(pubkey_bits), pubkey_type.\" \".pubkey_bits, pubkey_type) | table target subject_cn issuer not_after key sig_hash_algorithm verify_ok ca", "queryParameters": {"earliest": "$global_time.earliest$", "latest": "$global_time.latest$"}}
     },
     "ds_changes": {
       "type": "ds.search",

@@ -3,8 +3,9 @@
 Installed on the Splunk Cloud search head. Provides five Dashboard Studio views
 (Ping Trends, Speedtest Trends, Certificate Monitoring, Availability, App Health),
 three certificate alerts, plus search-time JSON extraction and the `netkit_index`
-macro. The field extractions and the macro are exported globally so ad-hoc
-searches work from any app; the views stay scoped to this app.
+macro. The field extractions, lookups, transforms, and the macro are exported
+globally so ad-hoc searches work from any app; the views stay scoped to this
+app.
 
 ## Requires the NetKit Add-on
 
@@ -16,12 +17,14 @@ instance (on-prem only, never the Cloud search head) to produce the `netkit:ping
 
 ## CIM (Common Information Model)
 
-NetKit's probe events are members of the CIM **Network Traffic** data model
-(`All_Traffic`). Two things are required for the data model to return them:
+NetKit's probe events are members of two CIM data models: all three sourcetypes
+join **Network Traffic** (`All_Traffic`), and `netkit:tls` events also join
+**Certificates**. Two things are required for the data models to return them:
 
 1. Install the **Splunk CIM Add-on** (`Splunk_SA_CIM`) on the same search head.
-2. Add NetKit's index (default `index=main`) to `cim_Network_Traffic_indexes` via
-   the CIM Setup UI, otherwise the data model stays empty.
+2. Add NetKit's index (default `index=main`) to both `cim_Network_Traffic_indexes`
+   and `cim_Certificates_indexes` via the CIM Setup UI, otherwise the data models
+   stay empty.
 
 Filter NetKit's synthetic traffic with `vendor_product=NetKit`.
 
