@@ -27,7 +27,7 @@
     "tasks": null,
     "inputGroups": null,
     "incompatibleApps": null,
-    "platformRequirements": {"splunk": {"Enterprise": ">=10.2.0"}},
+    "platformRequirements": null,
     "supportedDeployments": ["_standalone", "_distributed", "_search_head_clustering"],
     "targetWorkloads": ["_search_heads"]
 }
